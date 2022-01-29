@@ -22,6 +22,10 @@ import signal
 import argparse
 
 
+CEND = '\33[0m'
+CYELLOW = '\33[33m'
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('port', type=int, default=8000, nargs='?', help='port to listen on, default 8000')
 parser.add_argument('-c', '--cache-dir', default='./cache/', help='location of cache files, default ./cache')
@@ -45,7 +49,7 @@ class CacheHandler(http.server.SimpleHTTPRequestHandler):
         cache_filename = cache_base + m.hexdigest() + ".cached"
 
         if not os.path.exists(cache_filename):
-            self.log_message('downloading %s', self.path)
+            self.log_message(CYELLOW + 'downloading %s' + CEND, self.path)
             with open(cache_filename + ".temp", "wb") as output:
                 req = urllib.request.Request(self.path)
                 for k in self.headers:
