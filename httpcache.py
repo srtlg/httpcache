@@ -19,9 +19,16 @@ import shutil
 import os
 import hashlib
 import signal
+import argparse
 
 
-cache_base = "./cache/"
+parser = argparse.ArgumentParser()
+parser.add_argument('port', type=int, default=8000, nargs='?', help='port to listen on, default 8000')
+parser.add_argument('-c', '--cache-dir', default='./cache/', help='location of cache files, default ./cache')
+parser.add_argument('-b', '--bind', default='127.0.0.1', help='bind address, default 127.0.0.1')
+args = parser.parse_args()
+
+cache_base = args.cache_dir
 httpd = None
 
 
@@ -38,7 +45,7 @@ class CacheHandler(http.server.SimpleHTTPRequestHandler):
         cache_filename = cache_base + m.hexdigest() + ".cached"
 
         if not os.path.exists(cache_filename):
-            # print("cache miss "+ self.path)
+            self.log_message('downloading %s', self.path)
             with open(cache_filename + ".temp", "wb") as output:
                 req = urllib.request.Request(self.path)
                 for k in self.headers:
@@ -57,7 +64,7 @@ class CacheHandler(http.server.SimpleHTTPRequestHandler):
 signal.signal(signal.SIGINT, exit_gracefully)
 signal.signal(signal.SIGTERM, exit_gracefully)
 socketserver.TCPServer.allow_reuse_address = True
-httpd = socketserver.TCPServer(("", 8000), CacheHandler)
+httpd = socketserver.TCPServer((args.bind, args.port), CacheHandler)
 if not os.path.exists(cache_base):
     os.mkdir(cache_base)
 
