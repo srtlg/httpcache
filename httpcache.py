@@ -33,7 +33,7 @@ def exit_gracefully(sig, stack):
 
 class CacheHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        m = hashlib.md5()
+        m = hashlib.new("sha1", usedforsecurity=False)
         m.update(self.path.encode("utf-8"))
         cache_filename = cache_base + m.hexdigest() + ".cached"
 
