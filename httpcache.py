@@ -17,6 +17,7 @@ import socketserver
 import urllib.request
 import shutil
 import os
+import sys
 import hashlib
 import signal
 import argparse
@@ -25,6 +26,8 @@ import argparse
 CEND = '\33[0m'
 CYELLOW = '\33[33m'
 
+if sys.platform.startswith('win32'):
+    os.system('')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('port', type=int, default=8000, nargs='?', help='port to listen on, default 8000')
