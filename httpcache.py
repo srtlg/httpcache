@@ -21,6 +21,7 @@ import sys
 import hashlib
 import signal
 import argparse
+from pathlib import Path
 
 
 CEND = '\33[0m'
@@ -31,11 +32,11 @@ if sys.platform.startswith('win32'):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('port', type=int, default=8000, nargs='?', help='port to listen on, default 8000')
-parser.add_argument('-c', '--cache-dir', default='./cache/', help='location of cache files, default ./cache')
+parser.add_argument('-c', '--cache-dir', default='cache', help='location of cache files, default ./cache')
 parser.add_argument('-b', '--bind', default='127.0.0.1', help='bind address, default 127.0.0.1')
 args = parser.parse_args()
 
-cache_base = args.cache_dir
+cache_base = Path(args.cache_dir)
 httpd = None
 
 
@@ -49,20 +50,21 @@ class CacheHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         m = hashlib.new("sha1", usedforsecurity=False)
         m.update(self.path.encode("utf-8"))
-        cache_filename = cache_base + m.hexdigest() + ".cached"
+        cache_path = cache_base / "{}.cached".format(m.hexdigest())
 
-        if not os.path.exists(cache_filename):
+        if not cache_path.exists():
             self.log_message(CYELLOW + 'downloading %s' + CEND, self.path)
-            with open(cache_filename + ".temp", "wb") as output:
+            temp = str(cache_path) + '.temp'
+            with open(temp, "wb") as output:
                 req = urllib.request.Request(self.path)
                 for k in self.headers:
                     if k not in ["Host"]:
                         req.add_header(k, self.headers[k])
                 resp = urllib.request.urlopen(req)
                 shutil.copyfileobj(resp, output)
-                os.rename(cache_filename + ".temp", cache_filename)
+                os.rename(temp, cache_path)
 
-        with open(cache_filename, "rb") as cached:
+        with open(cache_path, "rb") as cached:
             self.send_response(200)
             self.end_headers()
             shutil.copyfileobj(cached, self.wfile)
