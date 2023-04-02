@@ -47,6 +47,8 @@ def exit_gracefully(sig, stack):
 
 
 class CacheHandler(http.server.SimpleHTTPRequestHandler):
+    _control_char_table = dict()
+
     def do_GET(self):
         m = hashlib.new("sha1", usedforsecurity=False)
         m.update(self.path.encode("utf-8"))
